@@ -189,7 +189,7 @@ def etl_db():
          links = booli_scrape_links(url_booli_uppsala_kommun, pages)
          listings = booli_scrape_objects(links[0])
          #for listing in listings:
-         listings[0].store_in_db()
+         #listings[0].store_in_db()
      except Exception as e:
         flash(f"An error occurred while initializing the database: {str(e)}", "danger")
      print("ETL process finished")
