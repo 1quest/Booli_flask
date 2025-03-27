@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, flash
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -8,6 +8,7 @@ url_booli_uppsala_kommun = 'https://www.booli.se/sok/till-salu?areaIds=1116&obje
 url_booli_home = 'https://www.booli.se'
 
 app = Flask(__name__)
+app.secret_key = '1116&objectType=Villa'  # Necessary for flashing messages, should be long and random
 
 # Initialize database connection
 SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
@@ -181,14 +182,14 @@ def booli_scrape_objects(links):
 
 # Define the ETL_db method
 def etl_db():
-    # ETL logic
-    print("ETL process started")
-    pages = booli_find_number_of_pages_data(url_booli_uppsala_kommun)
-    links = booli_scrape_links(url_booli_uppsala_kommun, pages)
-    listings = booli_scrape_objects(links)
-    for listing in listings:
-        listing.store_in_db()
-    print("ETL process finished")
+     # ETL logic
+     print("ETL process started")
+     pages = booli_find_number_of_pages_data(url_booli_uppsala_kommun)
+     links = booli_scrape_links(url_booli_uppsala_kommun, pages)
+     listings = booli_scrape_objects(links)
+     for listing in listings:
+         listing.store_in_db()
+     print("ETL process finished")
 
 @app.route('/')
 def index():
@@ -199,9 +200,17 @@ def run_etl():
     etl_db()
     return redirect(url_for('index'))
 
-if __name__ == '__main__':
-    # Initialize the database
-    db_initializer = DatabaseInitializer(app)
-    db_initializer.initialize()
+# Define the Connect_db method
+@app.route('/connect_db')
+def connect_db_route():
+    try:
+        # Initialize the database
+        print("Initializing db connection")
+        db_initializer = DatabaseInitializer(app)
+        db_initializer.initialize()
+    except Exception as e:
+        flash(f"An error occurred while initializing the database: {str(e)}", "danger")
+    return redirect(url_for('index'))
 
+if __name__ == '__main__':
     app.run(debug=True)

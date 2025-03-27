@@ -4,11 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ETL Button</title>
+    <!-- Add Bootstrap for styling (optional) -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 </head>
 <body>
-    <h1>Run ETL Process</h1>
-    <form action="{{ url_for('run_etl') }}" method="get">
-        <button type="submit">Refresh data</button>
-    </form>
+    <div class="container">
+        <h1>Connect DB method</h1>
+        <!-- Display flashed messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-danger">
+                    {% for category, message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('connect_db_route') }}" method="get">
+            <button type="submit" class="btn btn-primary">Connect database</button>
+        </form>
+
+        <h1>Run ETL Process</h1>
+        <form action="{{ url_for('run_etl') }}" method="get">
+            <button type="submit" class="btn btn-primary">Refresh data</button>
+        </form>
+    </div>
 </body>
 </html>
