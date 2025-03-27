@@ -216,5 +216,34 @@ def connect_db_route():
         flash(f"An error occurred while initializing the database: {str(e)}", "danger")
     return redirect(url_for('index'))
 
+
+@app.route('/add_dummy_row')
+def add_dummy_row():
+    try:
+        # Create a dummy RealEstateListing instance
+        dummy_listing = RealEstateListing(
+            booli_price=1000000,
+            boarea=100,
+            rum=4,
+            biarea=20,
+            tomtstorlek=500,
+            byggar=2000,
+            utgangspris=900000,
+            bostadstyp='Villa',
+            omrade='Dummy Area',
+            stad='Dummy City',
+            price_text='1,000,000 SEK',
+            url='http://example.com/dummy-listing'
+        )
+
+        # Store the dummy listing in the database
+        dummy_listing.storeInDB()
+
+        flash("Dummy row added successfully.", "success")
+    except Exception as e:
+        flash(f"An error occurred while adding the dummy row: {str(e)}", "danger")
+
+    return redirect(url_for('index'))
+
 if __name__ == '__main__':
     app.run(debug=True)

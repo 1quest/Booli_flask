@@ -13,11 +13,11 @@
         <!-- Display flashed messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="alert alert-danger">
-                    {% for category, message in messages %}
-                        <p>{{ message }}</p>
-                    {% endfor %}
-                </div>
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
             {% endif %}
         {% endwith %}
 
@@ -26,18 +26,13 @@
         </form>
 
         <h1>Run ETL Process</h1>
-         <!-- Display flashed messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="alert alert-danger">
-                    {% for category, message in messages %}
-                        <p>{{ message }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
         <form action="{{ url_for('run_etl') }}" method="get">
             <button type="submit" class="btn btn-primary">Refresh data</button>
+        </form>
+
+        <h1>Add Dummy Row</h1>
+        <form action="{{ url_for('add_dummy_row') }}" method="get">
+            <button type="submit" class="btn btn-primary">Add Dummy Row</button>
         </form>
     </div>
 </body>
