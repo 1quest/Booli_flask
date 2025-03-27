@@ -187,8 +187,8 @@ def etl_db():
      pages = booli_find_number_of_pages_data(url_booli_uppsala_kommun)
      links = booli_scrape_links(url_booli_uppsala_kommun, pages)
      listings = booli_scrape_objects(links)
-     for listing in listings:
-         listing.store_in_db()
+     #for listing in listings:
+     listings[0].store_in_db()
      print("ETL process finished")
 
 @app.route('/')
