@@ -2,11 +2,25 @@ from flask import Flask, render_template, redirect, url_for
 import requests
 from bs4 import BeautifulSoup
 import re
+from flask_sqlalchemy import SQLAlchemy
 
 url_booli_uppsala_kommun = 'https://www.booli.se/sok/till-salu?areaIds=1116&objectType=Villa&maxListPrice=7000000&minRooms=3.5'
 url_booli_home = 'https://www.booli.se'
 
 app = Flask(__name__)
+
+# Initialize database connection
+SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
+    username="GoHome2",
+    password="uZDzj4hxuGxBZZw",
+    hostname="GoHome2.mysql.pythonanywhere-services.com",
+    databasename="GoHome2$Booli",
+)
+app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
+app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
 
 # Helper function to safely extract text
 def safe_extract(li_elements, index, suffix=''):
@@ -15,7 +29,23 @@ def safe_extract(li_elements, index, suffix=''):
     except IndexError:
         return None
 
-class RealEstateListing:
+class RealEstateListing(db.Model):
+    __tablename__ = 'real_estate_listings'
+
+    id = db.Column(db.Integer, primary_key=True)
+    booli_price = db.Column(db.Float, nullable=False)
+    boarea = db.Column(db.Float, nullable=False)
+    rum = db.Column(db.Integer, nullable=False)
+    biarea = db.Column(db.Float, nullable=True)
+    tomtstorlek = db.Column(db.Float, nullable=True)
+    byggar = db.Column(db.Integer, nullable=True)
+    utgangspris = db.Column(db.Float, nullable=True)
+    bostadstyp = db.Column(db.String(50), nullable=False)
+    omrade = db.Column(db.String(100), nullable=False)
+    stad = db.Column(db.String(100), nullable=False)
+    price_text = db.Column(db.String(100), nullable=False)
+    url = db.Column(db.String(200), nullable=False)
+
     def __init__(self, booli_price, boarea, rum, biarea, tomtstorlek, byggar, utgangspris, bostadstyp, omrade, stad, price_text, url):
         self.booli_price = booli_price
         self.boarea = boarea
@@ -36,10 +66,20 @@ class RealEstateListing:
                 f"utgangspris={self.utgangspris}, bostadstyp={self.bostadstyp}, omrade={self.omrade}, "
                 f"stad={self.stad}, price_text={self.price_text}, url={self.url})")
 
-    def storeInDB(self, connection):
-        pass  # Implement your database storage logic here
+    def store_in_db(self):
+        db.session.add(self)
+        db.session.commit()
 
-def Booli_findNumberOfPagesData(url):
+class DatabaseInitializer:
+    def __init__(self, app):
+        self.app = app
+        self.db = db
+
+    def initialize(self):
+        with self.app.app_context():
+            self.db.create_all()
+
+def booli_find_number_of_pages_data(url):
     request = requests.get(url)
     soup = BeautifulSoup(request.text, 'lxml')
     data = soup.find_all('p', class_='m-2')
@@ -57,7 +97,7 @@ def Booli_findNumberOfPagesData(url):
         last_number = 0
     return int(last_number)
 
-def Booli_ScrapeLinks(url, pages):
+def booli_scrape_links(url, pages):
     hrefs = []
     for i in range(1, pages + 1):
         url_loop = f"{url}&page={i}"
@@ -81,7 +121,7 @@ def Booli_ScrapeLinks(url, pages):
 
     return hrefs
 
-def Booli_ScrapeObjects(links):
+def booli_scrape_objects(links):
     listings = []
     for j, row in enumerate(links):
         # Compile the listing-url
@@ -143,11 +183,11 @@ def Booli_ScrapeObjects(links):
 def etl_db():
     # ETL logic
     print("ETL process started")
-    pages = Booli_findNumberOfPagesData(url_booli_uppsala_kommun)
-    links = Booli_ScrapeLinks(url_booli_uppsala_kommun, pages)
-    listings = Booli_ScrapeObjects(links)
+    pages = booli_find_number_of_pages_data(url_booli_uppsala_kommun)
+    links = booli_scrape_links(url_booli_uppsala_kommun, pages)
+    listings = booli_scrape_objects(links)
     for listing in listings:
-        print(listing)
+        listing.store_in_db()
     print("ETL process finished")
 
 @app.route('/')
@@ -160,4 +200,8 @@ def run_etl():
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
+    # Initialize the database
+    db_initializer = DatabaseInitializer(app)
+    db_initializer.initialize()
+
     app.run(debug=True)
