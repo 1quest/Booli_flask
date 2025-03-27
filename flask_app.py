@@ -67,7 +67,7 @@ class RealEstateListing(db.Model):
                 f"utgangspris={self.utgangspris}, bostadstyp={self.bostadstyp}, omrade={self.omrade}, "
                 f"stad={self.stad}, price_text={self.price_text}, url={self.url})")
 
-    def store_in_db(self):
+    def storeInDB(self):
         db.session.add(self)
         db.session.commit()
 
